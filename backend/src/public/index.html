@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Form</title>
+  </head>
+  <body>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <input
+        type="file"
+        name="files"
+        title="Add images here"
+        id="file-input"
+        accept="image/*"
+        multiple
+      />
+      <ul id="file-list"></ul>
+      <button type="submit">Upload</button>
+      <input type="hidden" id="file-order" name="fileOrder" />
+    </form>
+
+    <script>
+      // Current reorder implementation
+      document.addEventListener("DOMContentLoaded", () => {
+        // access the various elements in the DOM
+        const fileInput = document.getElementById("file-input");
+        const fileList = document.getElementById("file-list");
+        const fileOrderInput = document.getElementById("file-order");
+
+        let files = [];
+
+        /**
+         * add an event listener to the file input element to listen for drag and drop changes
+         * when an element is dropped somewhere different, update the UI as well as an internal list of files
+         */
+        fileInput.addEventListener("change", (e) => {
+          files = [...e.target.files];
+          fileList.innerHTML = "";
+
+          for (let i = 0; i < files.length; i++) {
+            const fileName = files[i].name;
+            const listItem = document.createElement("li");
+            listItem.textContent = fileName;
+            listItem.draggable = true;
+
+            fileList.appendChild(listItem);
+
+            listItem.addEventListener("dragstart", handleDragStart);
+            listItem.addEventListener("dragover", handleDragOver);
+            listItem.addEventListener("drop", handleDrop);
+          }
+        });
+
+        let draggedItem;
+
+        // tracks the element being dragged
+        function handleDragStart(event) {
+          draggedItem = event.target;
+          event.dataTransfer.setData("text/plain", event.target.textContent);
+        }
+
+        // handles when the element is being dragged over another element
+        function handleDragOver(event) {
+          event.preventDefault();
+          if (event.target !== draggedItem && event.target.tagName === "LI") {
+            const draggedBefore = event.clientY < event.target.offsetTop;
+          }
+        }
+
+        /**
+         * handles the dragged element being dropped
+         *
+         * - updates UI by inserting the dragged element before the drop target
+         * - updates the internal list of files by inserting the dragged file before the drop target (using array splicing)
+         */
+        function handleDrop(event) {
+          event.preventDefault();
+          if (event.target !== draggedItem && event.target.tagName === "LI") {
+            const container = fileList;
+            const draggedIndex = Array.prototype.indexOf.call(
+              container.childNodes,
+              draggedItem
+            );
+            const dropIndex = Array.prototype.indexOf.call(
+              container.childNodes,
+              event.target
+            );
+            const insertBefore =
+              draggedIndex < dropIndex ? dropIndex + 1 : dropIndex;
+
+            files.splice(insertBefore, 0, files.splice(draggedIndex, 1)[0]);
+
+            container.insertBefore(
+              draggedItem,
+              container.children[insertBefore]
+            );
+
+            console.log(files);
+          }
+        }
+
+        /**
+         * add an event listener to the form to listen for form submission
+         *
+         * - when the form is submitted, create a string of file names separated by commas
+         * - this string is sent through the hidden input field to the server
+         *
+         */
+        const form = document.querySelector("form");
+        form.addEventListener("submit", (event) => {
+          const fileOrder = files.map((file) => file.name).join(",");
+          fileOrderInput.value = fileOrder;
+        });
+      });
+    </script>
+  </body>
+</html>

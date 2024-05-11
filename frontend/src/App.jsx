@@ -1,35 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import Carousel from "react-bootstrap/Carousel";
+import Image from "react-bootstrap/Image";
+import "bootstrap/dist/css/bootstrap.min.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+import "./App.css";
+import { IMAGES_URL } from "./constants/constants";
+
+const App = () => {
+  const [images, setImages] = useState([]);
+
+  // Fetch images from the backend when the component mounts
+  useEffect(() => {
+    fetchImages();
+
+    // Async function to fetch images from the backend and set the images state
+    async function fetchImages() {
+      const response = await fetch(IMAGES_URL);
+      const data = await response.json();
+      setImages(data);
+      console.log(data);
+    }
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div>
+      <Carousel>
+        {images.map((image) => (
+          <Carousel.Item key={image.filename}>
+            <Image
+              src={`${IMAGES_URL}/${image.filename}`}
+              style={{ maxWidth: "50%" }}
+              rounded
+            />
+          </Carousel.Item>
+        ))}
+      </Carousel>
+    </div>
+  );
+};
 
-export default App
+export default App;
